@@ -1,0 +1,24 @@
+﻿NeuralNetwork:
+	// Primary Functions:
+	Predict(float[] input)
+	RandomNetwork(int[] shape, int[] weightRange)
+	SimiliarNetwork(NeuralNetwork network, int[] weightRange, float percentChange = 0.3f)
+	BackpropagationTraining(NeuralNetwork network, float[][] examples, float[][] labels)
+
+
+
+Nudge formula:				new_weight[i,j]	= (% of responsibility of weight[i,j] for error of j) * average 0.5error^2 of output j
+											= (weight[i, j] / tot_weight_to[j]) * output_error[j]
+
+Backprop error formula:		input_error[i]	= (% of responsibility of weight[i,j] for error of j) * average 0.5error^2 of output j + ... j from 0 to n
+											= (weight[i, j] / weight_tot_to[j]) * output_error[j] + ... 
+											= NudgeFormula(i, j) + ...  j from 0 to n
+
+Backpropagation Training Procedure:
+	Forwards propagate with batch of examples.
+	Calculate average error for each output over each example.
+
+	Calculate the nudges to each edge based on error. float[,] layer.CalculateNudges(float[] error)
+	Retrieve a new nudged layer. 
+	Calculate error for the previous layer using backpropagation. (error[i] = nudges[i,j] + ...  j from 0 to n)
+

@@ -127,28 +127,52 @@ namespace NeuralNetworks
 			return new NeuralNetwork(newLayers);
 		}
 
-		public static NeuralNetwork BackpropagationTraining(NeuralNetwork network, float[][] examples, float[][] labels)
+		public static NeuralNetwork BackpropagationTraining(NeuralNetwork network, float[][] examples, float[][] target)
 		{
-			// Initialise List
+			// Initialise variables
 			Layer[] newLayers = new Layer[network.NumFunctionalLayers];
+			float[][] predictions = new float[examples.Length][];
+
+			float[,] tempNudges = new float[network.Shape[network.NumFunctionalLayers - 1], network.OutputSize];
+			float[] tempError = new float[network.OutputSize];
 
 			// Get predictions 
-			float[][] predictions = new float[examples.Length][];
 			for (int i = 0; i < examples.Length; i++)
 				predictions[i] = network.Predict(examples[i]);
 
-			// Get average differences (ERROR)
-			float[] averageDifference = new float[network.OutputSize]; // Difference for each node in the last layer
-			for (int i = 0; i < predictions.Length; i++) // Sum all predictions for example i for node j
-				for (int j = 0; j < network.OutputSize; j++)
-					averageDifference[j] += labels[i][j] - predictions[i][j];
-			for (int i = 0; i < averageDifference.Length; i++) // Divide by number of examples
-				averageDifference[i] /= examples.Length;
+			// Get error for output layer (average difference)
+			for (int outputNode = 0; outputNode < network.OutputSize; outputNode++) 
+				for (int example = 0; example < predictions.Length; example++)
+					// error[j] = (target[i,j] - prediction[i,j]) + ... for example i from 0 to n
+					tempError[outputNode] += target[example][outputNode] - predictions[example][outputNode];
 
-			// Apply Nudges
-			for (int i = network.layers.Length - 1; i >= 0; i++)
+			for (int i = 0; i < tempError.Length; i++)
+				// error[j] = Sum of error of all examples / number of examples
+				tempError[i] /= examples.Length;
+
+			// Get Nudges and new nudged Layer
+			/*
+			 tempNudges = layer.GetDesiredNudges()
+			newLayers[newLayers.Length - 1] = Layer.NudgedLayer(network.layers[network.layers.Length - 1], tempError);
+			*/
+
+			// For each preceding layer
+			for (int x = 0; x < network.layers.Length - 1; x++)
 			{
-				newLayers[i].BackwardsPropagate()
+				Layer layer = network.layers[x];
+				// Backpropagation
+				/*
+				for (int i = 0; i < layer.InputSize; i++)
+				{
+					tempError[i] = 0;
+
+					for (int j = 0; j < layer.OutputSize; j++) // output node j
+					{
+						tempError[i] += tempNudges[i,j];
+					}
+				}
+				*/
+				//newLayers[x] = Layer.NudgedLayer(layer, tempNudges);
 			}
 
 			return new NeuralNetwork(newLayers);

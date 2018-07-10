@@ -58,35 +58,6 @@ namespace NeuralNetworks
 			return result;
 		}
 
-		public float[] BackwardsPropagate(float[] error)
-		{
-			/*
-				Provides an array of proportionally desired change for each input node.
-				Backprop Error
-			*/
-
-			// Incorrect output size
-			if (error.Length != OutputSize)
-				throw new ArgumentException("Incorrect output size for layer");
-
-			float[] newError = new float[InputSize];
-
-			// newError[input node]  = % weight * error_j + ...
-			//						 = w_ij/w_tot * error_j + ...
-			//						 = (w_ij * error_j + ...) / w_tot
-			// Note: error = guess - answer = desired direction
-			for (int i = 0; i < InputSize; i++)
-			{
-				// newError[i] = sum(w_ij * error_j) / w_tot
-				for (int j = 0; j < OutputSize; j++)
-				{
-					newError[i] += weights[i, j] * error[j];
-				}
-				newError[i] /= SumWeightsToInput(i);
-			}
-			return newError;
-		}
-
 		////////////////////////////////// PRIVATE
 
 		private float SumWeightsToInput(int inputNode)
@@ -107,12 +78,17 @@ namespace NeuralNetworks
 			return sum;
 		}
 
-		private float[,] DesiredNudges(float[] error)
+		/*
+		 * 
+		 * TODO: !!!!!
+		 * 
+		 */
+		private float[,] GetDesiredNudges(float[] error)
 		{
-			// nudge = weight_ij
+			// nudge_ij = weight_ij
 			float[,] nudges = new float[InputSize + 1, OutputSize];
-
-			//nudge_ij	= ( % weight responsibility ) * error_j
+			
+			// nudge_ij	= ( % weight responsibility ) * error_j
 			//			= ( weight_ij / sumWeight_j ) * error_j
 			// Note: error = guess - answer = desired direction
 
@@ -171,6 +147,11 @@ namespace NeuralNetworks
 			
 		}
 
+		/*
+		 * 
+		 * TODO: !!!!!
+		 * 
+		 */
 		public static Layer NudgedLayer(Layer layer, float[] nudges, float multiplier = 1f)
 		{
 
