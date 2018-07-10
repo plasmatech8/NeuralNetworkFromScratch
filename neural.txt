@@ -1,0 +1,6 @@
+Step 1 Random Initialization
+Step 2 weights x inputs + bias
+step 3 calculate loss (mean squared error)
+step 4 find partial derivative for all weights
+step 5 calculate optimization direction on computational graph
+step 6 take step towards minima  optimized weights?
