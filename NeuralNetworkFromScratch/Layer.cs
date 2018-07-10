@@ -58,6 +58,27 @@ namespace NeuralNetworks
 			return result;
 		}
 
+		public float[,] GetDesiredNudges(float[] error)
+		{
+			// nudges[i,j] = weight[i,j]
+			float[,] nudges = new float[InputSize + 1, OutputSize];
+
+			// nudge_ij	= ( % weight responsibility ) * error_j
+			//			= ( weight_ij / sumWeight_j ) * error_j
+
+			for (int j = 0; j < OutputSize; j++) // Output Node
+			{
+				float sumWeight = SumWeightsToOutput(j);
+
+				for (int i = 0; i < InputSize + 1; i++) // Input node + Bias node
+				{
+					// nudge_ij = (weight_ij / sumWeight_j) * error_j
+					nudges[i, j] = (weights[i, j] / sumWeight) * error[j];
+				}
+			}
+			return nudges;
+		}
+
 		////////////////////////////////// PRIVATE
 
 		private float SumWeightsToInput(int inputNode)
@@ -76,33 +97,6 @@ namespace NeuralNetworks
 				sum += weights[i, outputNode];
 
 			return sum;
-		}
-
-		/*
-		 * 
-		 * TODO: !!!!!
-		 * 
-		 */
-		private float[,] GetDesiredNudges(float[] error)
-		{
-			// nudge_ij = weight_ij
-			float[,] nudges = new float[InputSize + 1, OutputSize];
-			
-			// nudge_ij	= ( % weight responsibility ) * error_j
-			//			= ( weight_ij / sumWeight_j ) * error_j
-			// Note: error = guess - answer = desired direction
-
-			for (int j = 0; j < OutputSize; j++) // Output Node
-			{
-				float sumWeight = SumWeightsToOutput(j);
-
-				for (int i = 0; i < InputSize + 1; i++) // Input node + Bias node
-				{
-					// nudge_ij = (weight_ij / sumWeight_j) * error_j
-					nudges[i, j] = (weights[i, j] / sumWeight) * error[j];
-				}
-			}
-			return nudges;
 		}
 
 		////////////////////////////////// STATIC
@@ -124,6 +118,12 @@ namespace NeuralNetworks
 			return new Layer(weights);
 		}
 
+		/*
+		 * 
+		 * TODO: Similiar layer should have edge weights changed by an random amount in a range. 
+		 * Not randomly chosen edges to change. 
+		 * 
+		 */
 		public static Layer SimiliarLayer(Layer layer, int[] weightRange, float percentChange = 0.3f)
 		{
 			// Temporary values
@@ -144,29 +144,22 @@ namespace NeuralNetworks
 
 			// Return
 			return new Layer(weights);
-			
 		}
 
 		/*
 		 * 
-		 * TODO: !!!!!
+		 * TODO: Unit Testing
 		 * 
 		 */
-		public static Layer NudgedLayer(Layer layer, float[] nudges, float multiplier = 1f)
+		public static Layer NudgedLayer(Layer layer, float[,] nudges, float learningRateMultiplier = 1f)
 		{
-
 			// Initialise 2D array of floats
 			float[,] weights = layer.weights;
 
 			// Fill 2D array
 			for (int i = 0; i < weights.GetLength(0); i++) // For each Input node
-			{
-				weights[i] += nudges[i] * multiplier;
-
-
-			}
-			
-				
+				for (int j = 0; j < weights.GetLength(1); j++) // For each Input node
+					weights[i,j] += nudges[i,j] * learningRateMultiplier;
 
 			// Return
 			return new Layer(weights);

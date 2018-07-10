@@ -127,14 +127,27 @@ namespace NeuralNetworks
 			return new NeuralNetwork(newLayers);
 		}
 
-		public static NeuralNetwork BackpropagationTraining(NeuralNetwork network, float[][] examples, float[][] target)
+		/*
+		 * 
+		 * TODO: Testing.
+		 * TODO: Verify knowledge of backpropagation.
+		 * 
+		 * OutputNodeError[j]	= average_error_over_examples
+		 * Nudge[i,j]			= OutputNodeError[j] * (weight[i,j]/total_weight_to[j])
+		 * BackpropNodeError[i] = Nudge[i,j] + ... for j from 0 to n
+		 * 
+		 */
+		public static NeuralNetwork BackpropagationTraining(NeuralNetwork network, float[][] examples, float[][] target, float learningRateMultiplier = 1f)
 		{
 			// Initialise variables
 			Layer[] newLayers = new Layer[network.NumFunctionalLayers];
+
 			float[][] predictions = new float[examples.Length][];
+			Layer outputLayer = network.layers[network.NumFunctionalLayers - 1];
 
 			float[,] tempNudges = new float[network.Shape[network.NumFunctionalLayers - 1], network.OutputSize];
 			float[] tempError = new float[network.OutputSize];
+
 
 			// Get predictions 
 			for (int i = 0; i < examples.Length; i++)
@@ -151,27 +164,25 @@ namespace NeuralNetworks
 				tempError[i] /= examples.Length;
 
 			// Get Nudges and new nudged Layer
-			/*
-			 tempNudges = layer.GetDesiredNudges()
-			newLayers[newLayers.Length - 1] = Layer.NudgedLayer(network.layers[network.layers.Length - 1], tempError);
-			*/
-
+			tempNudges = outputLayer.GetDesiredNudges(tempError);
+			newLayers[newLayers.Length - 1] = Layer.NudgedLayer(outputLayer, tempNudges, learningRateMultiplier);
+			
 			// For each preceding layer
 			for (int x = 0; x < network.layers.Length - 1; x++)
 			{
 				Layer layer = network.layers[x];
+				
 				// Backpropagation
-				/*
 				for (int i = 0; i < layer.InputSize; i++)
 				{
 					tempError[i] = 0;
 
-					for (int j = 0; j < layer.OutputSize; j++) // output node j
-					{
+					// Set error of each input node to sum of nudges to incoming edges.
+					for (int j = 0; j < layer.OutputSize; j++)
 						tempError[i] += tempNudges[i,j];
-					}
+
 				}
-				*/
+				
 				//newLayers[x] = Layer.NudgedLayer(layer, tempNudges);
 			}
 
