@@ -60,11 +60,13 @@ namespace NeuralNetworks
 
 		public float[,] GetDesiredNudges(float[] error)
 		{
+			/*
+			 * Desired Nudges/Edge deltas describes the desired movement of edge weights based on its responsibility for an error on the output.
+			 * nudge[i, j] = (weight[i, j]/totalWeight[j]) * error[j]
+			 */
+
 			// nudges[i,j] = weight[i,j]
 			float[,] nudges = new float[InputSize + 1, OutputSize];
-
-			// nudge_ij	= ( % weight responsibility ) * error_j
-			//			= ( weight_ij / sumWeight_j ) * error_j
 
 			for (int j = 0; j < OutputSize; j++) // Output Node
 			{
@@ -72,11 +74,33 @@ namespace NeuralNetworks
 
 				for (int i = 0; i < InputSize + 1; i++) // Input node + Bias node
 				{
-					// nudge_ij = (weight_ij / sumWeight_j) * error_j
+					// nudge[i, j] = (weight[i, j]/totalWeight[j]) * error[j]
 					nudges[i, j] = (weights[i, j] / sumWeight) * error[j];
 				}
 			}
 			return nudges;
+		}
+
+		public float[] GetInputNodeErrors(float[,] edgeDeltas, bool inclBias = true)
+		{
+			/*
+			 * Aggregates edge deltas into an error for each input node
+			 * NodeError[node1] = Sum(edgeDelta[node1,node2])
+			 */
+
+			float[] nodeErrors;
+			if (inclBias)
+				nodeErrors = new float[InputSize];
+			else
+				nodeErrors = new float[InputSize + 1];
+
+			for (int k = 0; k < nodeErrors.Length; k++) // input
+				for (int j = 0; j < OutputSize; j++) // output
+				{
+					// NodeError[node1] = Sum(edgeDelta[node1,node2])
+					nodeErrors[k] += edgeDeltas[k, j];
+				}
+			return nodeErrors;
 		}
 
 		////////////////////////////////// PRIVATE
@@ -90,10 +114,10 @@ namespace NeuralNetworks
 			return sum;
 		}
 
-		private float SumWeightsToOutput(int outputNode)
+		private float SumWeightsToOutput(int outputNode, bool inclBias = true)
 		{
 			float sum = 0;
-			for (int i = 0; i < InputSize + 1; i++)
+			for (int i = 0; i < InputSize + (inclBias ? 1 : 0); i++)
 				sum += weights[i, outputNode];
 
 			return sum;
@@ -157,8 +181,8 @@ namespace NeuralNetworks
 			float[,] weights = layer.weights;
 
 			// Fill 2D array
-			for (int i = 0; i < weights.GetLength(0); i++) // For each Input node
-				for (int j = 0; j < weights.GetLength(1); j++) // For each Input node
+			for (int i = 0; i < weights.GetLength(0); i++) // Input node
+				for (int j = 0; j < weights.GetLength(1); j++) // Output node
 					weights[i,j] += nudges[i,j] * learningRateMultiplier;
 
 			// Return

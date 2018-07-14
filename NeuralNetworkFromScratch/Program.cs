@@ -51,47 +51,108 @@ namespace NeuralNetworkFromScratch
 			bool done = false;
 			double bestLoss = Double.PositiveInfinity;
 			NeuralNetwork bestNetwork = network;
+			int iteration = 0;
 
 			while (!done)
 			{
 				network = NeuralNetwork.SimiliarNetwork(network, new int[] { -10, 10 });
 				//InspectNetwork(network);
-				double loss = 0;
-				done = true;
+				double loss = 0d;
 				
 				// For each example
 				for (int i = 0; i < examples.Length; i++)
 				{
 					float[] feature = new float[1] { examples[i][0] };
 					float[] label = new float[1] { examples[i][1] };
-					
+					float[] prediction = network.Predict(feature);
 
 					// For each output value
 					for (int j = 0; j < label.Length; j++)
 					{
-						double predictionValue = network.Predict(feature)[j];
+						double predictionValue = prediction[j];
 						double labelValue = label[j];
 						loss += Math.Pow(labelValue - predictionValue, 2d);
-
-						if (Math.Abs(predictionValue - labelValue) > 0.5f)
-							done = false;
 					}
 				}
-				
+
+				if (loss < 1f)
+					done = true;
+
 				if (loss > bestLoss)
 					network = bestNetwork;
 				
+
 				if (loss < bestLoss)
 				{
 					bestLoss = loss;
-					Console.WriteLine("Best Loss: " + bestLoss.ToString());
+					Console.WriteLine("(" + iteration.ToString() + ") Best Loss: " + bestLoss.ToString());
 				}
-					
 
+				iteration += 1;
 
 				Debug.WriteLine("L2 Loss: " + loss.ToString());
 				Debug.WriteLine("================= Best Loss: " + bestLoss.ToString());
 			}
+			Debug.WriteLine("///////////////////////////////////////////////");
+		}
+
+		static void TestBackprop()
+		{
+			Debug.WriteLine("///////////////////////////////////////////////");
+
+			NeuralNetwork network = NeuralNetwork.RandomNetwork(new int[] { 1, 1 }, new int[] { -5, 5 });
+			float[][] examples = new float[4][]
+			{
+				new float[1]{ 3 },
+				new float[1]{ 4 },
+				new float[1]{ 5 },
+				new float[1]{ 6 }
+			};
+			float[][] targets = new float[4][]
+			{
+				new float[1]{ 20 },
+				new float[1]{ 25 },
+				new float[1]{ 30 },
+				new float[1]{ 35 }
+			};
+
+			bool done = false;
+			double bestLoss = float.PositiveInfinity;
+			int iteration = 0;
+
+			while (!done)
+			{
+				// 1) Calculate Loss
+				double loss = 0;
+
+				// For each example
+				for (int i = 0; i < examples.Length; i++)
+				{
+					float[] features = new float[1] { examples[i][0] };
+					float[] labels = new float[1] { targets[i][0] };
+					
+					float[] prediction = network.Predict( features );
+					loss += Math.Pow(labels[0] - prediction[0], 2d);
+				}
+
+				if (loss < 1f)
+					done = true;
+
+				if (loss < bestLoss)
+				{
+					bestLoss = loss;
+					Console.WriteLine("(" + iteration.ToString() + ") Best Loss: " + bestLoss.ToString());
+				}
+				Console.WriteLine("Loss: " + loss);
+				iteration += 1;
+				network = NeuralNetwork.BackpropagationTraining(network, examples, targets, 0.001f);
+
+				Debug.WriteLine("L2 Loss: " + loss.ToString());
+				Debug.WriteLine("================= Best Loss: " + bestLoss.ToString());
+			}
+
+
+
 			Debug.WriteLine("///////////////////////////////////////////////");
 		}
 
@@ -101,7 +162,8 @@ namespace NeuralNetworkFromScratch
 			InspectNetwork(network);
 
 
-			TestNetwork();
+			//TestNetwork();
+			TestBackprop();
 
 
 			Debug.WriteLine("Done.");
