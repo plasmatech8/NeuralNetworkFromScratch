@@ -26,7 +26,7 @@ namespace NeuralNetworks
 
 		////////////////////////////////// FIELDS
 
-		private Layer[] layers; // (excluding input layer)
+		public Layer[] layers; // (excluding input layer)
 
 		////////////////////////////////// PROPERTIES
 
@@ -51,6 +51,17 @@ namespace NeuralNetworks
 			get
 			{
 				return layers.Length;
+			}
+		}
+
+		public int NumFunctionalNodes
+		{
+			get
+			{
+				int num = 0;
+				for (int i = 0; i < layers.Length; i++)
+					num += layers[i].OutputSize;
+				return num;
 			}
 		}
 
@@ -106,13 +117,17 @@ namespace NeuralNetworks
 			{
 				int inputSize = shape[i];
 				int outputSize = shape[i + 1];
-				newLayers[i] = Layer.RandomLayer(inputSize, outputSize, weightRange);
+				if (i != shape.Length - 1)
+					newLayers[i] = Layer.RandomLayer(inputSize, outputSize, weightRange);
+				else // If final layer
+					newLayers[i] = Layer.RandomLayer(inputSize, outputSize, weightRange, false);
+
 			}
 
 			return new NeuralNetwork(newLayers);
 		}
 
-		public static NeuralNetwork SimiliarNetwork(NeuralNetwork network, int[] weightRange, float percentChange = 0.3f)
+		public static NeuralNetwork SimilarNetwork(NeuralNetwork network, float maxChangeAmount = 0.2f)
 		{
 			// Initialise List
 			Layer[] newLayers = new Layer[network.NumFunctionalLayers];
@@ -121,7 +136,7 @@ namespace NeuralNetworks
 			for (int i = 0; i < network.layers.Length; i++)
 			{
 				Layer layer = network.layers[i];
-				newLayers[i] = Layer.SimiliarLayer(layer, weightRange, percentChange);
+				newLayers[i] = Layer.SimilarLayer(layer, maxChangeAmount);
 			}
 
 			return new NeuralNetwork(newLayers);
@@ -182,6 +197,74 @@ namespace NeuralNetworks
 				newLayers[i] = Layer.NudgedLayer(network.layers[i], edgeDeltas[i], learningRateMultiplier);
 			
 			return new NeuralNetwork(newLayers);
+		}
+
+		/*
+		 * 
+		 * TODO: Testing.
+		 * TODO: It doesn't work that well for some reason
+		 * 
+		 */
+		public static NeuralNetwork RandomChangeTraining(NeuralNetwork network, float[][] examples, float[][] target, float lossTarget, float maxRandomChangeAmount = 1f)
+		{
+
+			bool done = false;
+			double bestLoss = Double.PositiveInfinity;
+			float maxChange = maxRandomChangeAmount;
+			int iteration = 0;
+
+			NeuralNetwork bestNetwork = network;
+
+			while (!done)
+			{
+				NeuralNetwork newNetwork = SimilarNetwork(bestNetwork, maxChange);
+				double loss = 0d;
+
+				// For each example
+				for (int i = 0; i < examples.Length; i++)
+				{
+					float[] feature = examples[i];
+					float[] label = target[i];
+					float[] prediction = newNetwork.Predict(feature);
+
+					// For each output value
+					for (int j = 0; j < label.Length; j++)
+					{
+						double predictionValue = prediction[j];
+						double labelValue = label[j];
+						loss += Math.Pow(labelValue - predictionValue, 2d);
+						//Console.WriteLine(predictionValue);
+						//Console.WriteLine(labelValue);
+					}
+				}
+				// Average loss/sum of squares over all examples
+				loss = loss / examples.Length;
+
+				Console.WriteLine("L " + loss.ToString());
+
+				if (loss < 0.005d)
+				{
+					done = true;
+				}
+
+				if (loss > bestLoss)
+				{
+					Console.WriteLine("BAD NETWORK");
+				}
+
+				if (loss < bestLoss)
+				{
+					bestNetwork = newNetwork;
+					bestLoss = loss;
+					Console.WriteLine("===================== (" + iteration.ToString() + ") Best Loss: " + bestLoss.ToString());
+					Console.WriteLine("W" + newNetwork.layers[0].weights[0, 0].ToString());
+					Console.WriteLine("B" + newNetwork.layers[0].weights[1, 0].ToString());
+				}
+
+				iteration += 1;
+			}
+
+			return bestNetwork;
 		}
 
 		////////////////////////////////// 

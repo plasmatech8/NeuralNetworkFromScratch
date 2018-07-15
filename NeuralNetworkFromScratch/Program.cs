@@ -29,73 +29,42 @@ namespace NeuralNetworkFromScratch
 			Debug.WriteLine("///////////////////////////////////////////////");
 		}
 
-		static void TestNetwork()
+		static void TestRandomChangeTraining()
 		{
-			Debug.WriteLine("///////////////////////////////////////////////");
-
-			NeuralNetwork network = NeuralNetwork.RandomNetwork(new int[] { 1, 1 }, new int[] { -5, 5 });
+			
 			float[][] examples = new float[4][]
 			{
-				new float[2]{ 3,20 },
-				new float[2]{ 4,25 },
-				new float[2]{ 5,30 },
-				new float[2]{ 6,35 }
+				new float[1]{ 3 },
+				new float[1]{ 4 },
+				new float[1]{ 5 },
+				new float[1]{ 6 }
 			};
-			//{ // I cannot account for parabolic data
-			//	new float[2]{ 1,1 },
-			//	new float[2]{ 2,4 },
-			//	new float[2]{ 3,9 },
-			//	new float[2]{ 4,16 }
+			//{
+			//	new float[1] { 1 },
+			//	new float[1] { 2 },
+			//	new float[1] { 3 },
+			//	new float[1] { 4  }
+			//};
+			float[][] targets = new float[4][]
+			{
+				new float[1]{ 20 },
+				new float[1]{ 25 },
+				new float[1]{ 30 },
+				new float[1]{ 35 }
+			};
+			//{
+			//	new float[1]{ 1 },
+			//	new float[1]{ 4 },
+			//	new float[1]{ 9 },
+			//	new float[1]{ 16 }
 			//};
 
-			bool done = false;
-			double bestLoss = Double.PositiveInfinity;
-			NeuralNetwork bestNetwork = network;
-			int iteration = 0;
-
-			while (!done)
-			{
-				network = NeuralNetwork.SimiliarNetwork(network, new int[] { -10, 10 });
-				//InspectNetwork(network);
-				double loss = 0d;
-				
-				// For each example
-				for (int i = 0; i < examples.Length; i++)
-				{
-					float[] feature = new float[1] { examples[i][0] };
-					float[] label = new float[1] { examples[i][1] };
-					float[] prediction = network.Predict(feature);
-
-					// For each output value
-					for (int j = 0; j < label.Length; j++)
-					{
-						double predictionValue = prediction[j];
-						double labelValue = label[j];
-						loss += Math.Pow(labelValue - predictionValue, 2d);
-					}
-				}
-
-				if (loss < 1f)
-					done = true;
-
-				if (loss > bestLoss)
-					network = bestNetwork;
-				
-
-				if (loss < bestLoss)
-				{
-					bestLoss = loss;
-					Console.WriteLine("(" + iteration.ToString() + ") Best Loss: " + bestLoss.ToString());
-				}
-
-				iteration += 1;
-
-				Debug.WriteLine("L2 Loss: " + loss.ToString());
-				Debug.WriteLine("================= Best Loss: " + bestLoss.ToString());
-			}
-			Debug.WriteLine("///////////////////////////////////////////////");
+			NeuralNetwork network = NeuralNetwork.RandomNetwork(new int[] { 1, 1 }, new int[] { 10,10 });
+			network = NeuralNetwork.RandomChangeTraining(network, examples, targets, 0.05f);
+			
+			
 		}
-
+		/*
 		static void TestBackprop()
 		{
 			Debug.WriteLine("///////////////////////////////////////////////");
@@ -134,8 +103,9 @@ namespace NeuralNetworkFromScratch
 					float[] prediction = network.Predict( features );
 					loss += Math.Pow(labels[0] - prediction[0], 2d);
 				}
+				loss = loss / examples.Length; // Average loss/sum of squares over all examples
 
-				if (loss < 1f)
+				if (loss < 0.1d)
 					done = true;
 
 				if (loss < bestLoss)
@@ -155,15 +125,15 @@ namespace NeuralNetworkFromScratch
 
 			Debug.WriteLine("///////////////////////////////////////////////");
 		}
-
+		*/
 		static void Main(string[] args)
 		{
 			NeuralNetwork network = NeuralNetwork.RandomNetwork(new int[] { 2, 3, 2 }, new int[] { 0, 1 });
 			InspectNetwork(network);
 
 
-			//TestNetwork();
-			TestBackprop();
+			TestRandomChangeTraining();
+			//TestBackprop();
 
 
 			Debug.WriteLine("Done.");

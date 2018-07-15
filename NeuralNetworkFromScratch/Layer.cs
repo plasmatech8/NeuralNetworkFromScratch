@@ -7,7 +7,8 @@ namespace NeuralNetworks
 	{
 		////////////////////////////////// FIELDS
 
-		private float[,] weights;   // [InputNode, OuputNode] - Bias is the last input node
+		private readonly bool doRelu;
+		public float[,] weights;   // [InputNode, OuputNode] - Bias is the last input node
 
 		////////////////////////////////// PROPERTIES
 
@@ -29,8 +30,9 @@ namespace NeuralNetworks
 
 		////////////////////////////////// CONSTRUCTORS
 
-		public Layer(float[,] weights)
+		public Layer(float[,] weights, bool doRelu = true)
 		{
+			this.doRelu = doRelu;
 			this.weights = weights;
 		}
 		
@@ -54,6 +56,11 @@ namespace NeuralNetworks
 				// 1 * Bias (weight)
 				result[j] += weights[InputSize, j]; // (Highest index)
 			}
+
+			// Relu activation function
+			if (doRelu)
+				for (int j = 0; j < OutputSize; j++)
+					result[j] = Math.Max(0, result[j]);
 
 			return result;
 		}
@@ -125,7 +132,7 @@ namespace NeuralNetworks
 
 		////////////////////////////////// STATIC
 
-		public static Layer RandomLayer(int inputSize, int outputSize, int[] weightRange)
+		public static Layer RandomLayer(int inputSize, int outputSize, int[] weightRange, bool doRelu = true)
 		{
 			// Initialise 2D array of floats
 			float[,] weights = new float[inputSize + 1, outputSize];
@@ -136,45 +143,33 @@ namespace NeuralNetworks
 			// Fill 2D array
 			for (int i = 0; i < inputSize + 1; i++)
 				for (int j = 0; j < outputSize; j++)
-					weights[i,j] = rng.Next(weightRange[0] * 20, weightRange[1] * 20) / 20f;
+					weights[i,j] = rng.Next(weightRange[0] * 50, weightRange[1] * 50) / 50f;
 
 			// Return
-			return new Layer(weights);
+			return new Layer(weights, doRelu);
 		}
 
-		/*
-		 * 
-		 * TODO: Similiar layer should have edge weights changed by an random amount in a range. 
-		 * Not randomly chosen edges to change. 
-		 * 
-		 */
-		public static Layer SimiliarLayer(Layer layer, int[] weightRange, float percentChange = 0.3f)
+		public static Layer SimilarLayer(Layer layer, float maxChangeAmount = 0.2f)
 		{
-			// Temporary values
-			int inputSize = layer.InputSize;
-			int outputSize = layer.OutputSize;
+			// Init new layer
+			float[,] newWeights = (float[,])layer.weights.Clone();
 
-			// Initialise 2D array of floats
-			float[,] weights = new float[inputSize + 1, outputSize];
-
-			// Random
+			// Init Random
 			Random rng = new Random(Guid.NewGuid().GetHashCode());
 
 			// Fill 2D array
-			for (int i = 0; i < inputSize + 1; i++)
-				for (int j = 0; j < outputSize; j++)
-					if (rng.Next(1, 101) < percentChange * 100) // chance of changing a value to a new random float
-						weights[i, j] = rng.Next(weightRange[0] * 20, weightRange[1] * 20) / 20f;
-
-			// Return
-			return new Layer(weights);
+			for (int i = 0; i < newWeights.GetLength(0); i++)
+				for (int j = 0; j < newWeights.GetLength(1); j++)
+				{
+					Console.WriteLine(">" + (newWeights[i, j]).ToString());
+					newWeights[i, j] += (float)(rng.NextDouble() * maxChangeAmount * 2 - maxChangeAmount);
+					Console.WriteLine("?" + (newWeights[i, j]).ToString());
+					//Console.WriteLine("?" + (rng.NextDouble() * maxChangeAmount * 2 - maxChangeAmount).ToString());
+				}
+				
+			return new Layer(newWeights, layer.doRelu);
 		}
 
-		/*
-		 * 
-		 * TODO: Unit Testing
-		 * 
-		 */
 		public static Layer NudgedLayer(Layer layer, float[,] nudges, float learningRateMultiplier = 1f)
 		{
 			// Initialise 2D array of floats
@@ -186,7 +181,7 @@ namespace NeuralNetworks
 					weights[i,j] += nudges[i,j] * learningRateMultiplier;
 
 			// Return
-			return new Layer(weights);
+			return new Layer(weights, layer.doRelu);
 			
 		}
 	}
