@@ -1,5 +1,6 @@
-(Abandoned)
-Achieved a neural network, though training procedures do not work very well. Project may be redone with expanded Knowledge of ML.
+Creating a simple and (crude) neural network which aims to utilitse backpropagation.
+ 
+Achieved a neural network, though training procedures do not work very well. Project may be redone with better future Knowledge.
 
 # Neural Network From Scratch
 This is a small'ish project aiming to create a simple/basic neural network which utilitses backpropagation. 
